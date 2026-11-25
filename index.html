@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长江电力 600900.SH · 水变黄金</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      ink:'#05070D', panel:'#0B101B', panel2:'#111826', line:'#1C2537',
+      gold:'#D4AF37', goldlt:'#F5DC82', golddk:'#8A6B17',
+      cyanx:'#38BDF8', up:'#F87171', down:'#4ADE80',
+    },
+    fontFamily: {
+      serifcn:['"Noto Serif SC"','Songti SC','SimSun','serif'],
+      sanscn:['"Noto Sans SC"','PingFang SC','Microsoft YaHei','sans-serif'],
+    }
+  }}
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+  html{scroll-behavior:smooth}
+  section[id],header[id]{scroll-margin-top:74px}
+  body{
+    background:
+      radial-gradient(1200px 600px at 85% -8%, rgba(212,175,55,.10), transparent 60%),
+      radial-gradient(900px 520px at -8% 42%, rgba(56,189,248,.06), transparent 62%),
+      #05070D;
+    color:#C7D2E2; font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{ /* 细网格质感 */
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:linear-gradient(rgba(212,175,55,.035) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(212,175,55,.035) 1px,transparent 1px);
+    background-size:56px 56px;
+    mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 80%);
+  }
+  ::selection{background:rgba(212,175,55,.4);color:#fff}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-track{background:#05070D}
+  ::-webkit-scrollbar-thumb{background:#232F45;border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:#D4AF37}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* ============ 金色流光标题 ============ */
+  .gold-text{
+    background:linear-gradient(110deg,#8a6b17 0%,#f7df86 20%,#d4af37 42%,#fff3c4 50%,#d4af37 60%,#8a6b17 100%);
+    background-size:240% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shimmer 6s linear infinite;
+  }
+  @keyframes shimmer{to{background-position:240% center}}
+
+  /* ============ 卡片 ============ */
+  .card{
+    background:linear-gradient(165deg,rgba(17,24,38,.94),rgba(9,13,22,.94));
+    border:1px solid #1C2537;border-radius:18px;position:relative;overflow:hidden;
+    transition:transform .45s cubic-bezier(.2,.7,.3,1),border-color .45s,box-shadow .45s;
+  }
+  .card::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s;
+    background:radial-gradient(460px 220px at var(--mx,50%) var(--my,0%),rgba(212,175,55,.12),transparent 70%);
+  }
+  .card:hover{transform:translateY(-4px);border-color:rgba(212,175,55,.5);box-shadow:0 20px 60px -20px rgba(212,175,55,.3)}
+  .card:hover::before{opacity:1}
+  .card-gold{border-color:rgba(212,175,55,.42)}
+  .glass{background:rgba(11,16,27,.66);backdrop-filter:blur(12px)}
+
+  /* ============ 幽灵章节数字 ============ */
+  .ghost{
+    position:absolute;right:-6px;top:-38px;line-height:1;pointer-events:none;user-select:none;
+    font-family:"Noto Serif SC",serif;font-weight:900;font-size:clamp(80px,12vw,150px);
+    color:transparent;-webkit-text-stroke:1.5px rgba(212,175,55,.16);
+  }
+
+  /* ============ 金线 ============ */
+  .gold-rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.6),transparent)}
+  .glow-dot{width:7px;height:7px;border-radius:50%;background:#F5DC82;box-shadow:0 0 10px 2px rgba(212,175,55,.7)}
+
+  /* ============ 入场 ============ */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.2,.7,.3,1),transform .9s cubic-bezier(.2,.7,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ============ 跑马灯 ============ */
+  .ticker{overflow:hidden;border-block:1px solid rgba(212,175,55,.22);background:rgba(212,175,55,.05)}
+  .ticker-track{display:flex;width:max-content;animation:tick 46s linear infinite}
+  .ticker:hover .ticker-track{animation-play-state:paused}
+  @keyframes tick{to{transform:translateX(-50%)}}
+  .ti{display:flex;align-items:center;gap:.55rem;padding:.62rem 1.4rem;white-space:nowrap;font-size:13px}
+  .ti b{color:#F5DC82;font-weight:600}
+  .sep{color:rgba(212,175,55,.55);font-size:10px}
+
+  /* ============ 炼金流水线 ============ */
+  .pipe{height:2px;flex:1;min-width:26px;
+    background:repeating-linear-gradient(90deg,rgba(212,175,55,.85) 0 9px,transparent 9px 18px);
+    animation:pipedash 1.1s linear infinite}
+  @keyframes pipedash{to{background-position:18px 0}}
+  .step-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(212,175,55,.45);background:radial-gradient(circle at 35% 25%,rgba(212,175,55,.22),rgba(212,175,55,.05));
+    box-shadow:0 0 18px rgba(212,175,55,.22) inset}
+
+  /* ============ 地图节点 ============ */
+  .st-node{cursor:pointer}
+  .st-node circle.core{transition:r .3s,fill .3s}
+  .st-node:hover circle.core,.st-node.active circle.core{r:11;fill:#FFF3C4}
+  .st-node.active text,.st-node:hover text{fill:#FFF3C4}
+  .pulse-node{animation:pulse 2.8s ease-out infinite}
+  @keyframes pulse{0%{opacity:.7;r:7}70%{opacity:0;r:22}100%{opacity:0;r:22}}
+
+  /* ============ 涨跌（A股惯例） ============ */
+  .txt-up{color:#F87171}.txt-down{color:#4ADE80}
+
+  table.data-table th{color:#8FA3BF;font-weight:500}
+  table.data-table td,table.data-table th{padding:.55rem .8rem;border-bottom:1px solid #16202f;font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.data-table tbody tr{transition:background .3s}
+  table.data-table tbody tr:hover{background:rgba(212,175,55,.06)}
+
+  .badge{font-size:11px;letter-spacing:.1em}
+  .chip{border:1px solid rgba(212,175,55,.32);background:rgba(212,175,55,.08)}
+  @media (max-width:640px){.hide-sm{display:none}}
+  @media print{.reveal{opacity:1!important;transform:none!important}body{background:#05070D!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}.card{break-inside:avoid}}
+</style>
+</head>
+<body class="antialiased relative">
+
+<!-- 进度条 -->
+<div class="fixed top-[56px] left-0 right-0 h-[2px] z-50">
+  <div id="bar" class="h-full w-0" style="background:linear-gradient(90deg,#8A6B17,#F5DC82,#38BDF8);box-shadow:0 0 12px rgba(212,175,55,.8)"></div>
+</div>
+
+<!-- 导航 -->
+<nav class="fixed top-0 inset-x-0 z-40 glass" style="border-bottom:1px solid rgba(212,175,55,.18)">
+  <div class="max-w-7xl mx-auto px-5 h-14 flex items-center justify-between">
+    <a href="#hero" class="flex items-center gap-2.5">
+      <span class="w-7 h-7 rounded-md flex items-center justify-center" style="background:linear-gradient(135deg,#F5DC82,#8A6B17);box-shadow:0 0 14px rgba(212,175,55,.5)">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="#05070D" stroke-width="2.4"><path d="M3 17c3-4 5-9 5-9s2 5 5 9 5-4 5-4" stroke-linecap="round"/></svg>
+      </span>
+      <span class="font-serifcn font-bold tracking-wide text-slate-100 text-sm">长江电力 <span class="text-gold">600900.SH</span></span>
+    </a>
+    <div class="flex items-center gap-6 text-[13px] text-slate-400">
+      <a href="#chain" class="nav-l hide-sm">炼金流水线</a>
+      <a href="#assets" class="nav-l hide-sm">六库资产</a>
+      <a href="#finance" class="nav-l hide-sm">财务估值</a>
+      <a href="#backtest" class="nav-l hide-sm">十年回测</a>
+      <span class="chip rounded-full px-3 py-1 badge text-goldlt">数据基准 2026-11-25</span>
+    </div>
+  </div>
+  <style>.nav-l{position:relative;transition:color .3s}.nav-l:hover{color:#F5DC82}.nav-l::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:1px;background:#D4AF37;transition:width .35s}.nav-l:hover::after{width:100%}</style>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header id="hero" class="relative overflow-hidden">
+  <canvas id="flow" class="absolute inset-0 w-full h-full"></canvas>
+  <!-- 文字区暗化，保证标题对比度 -->
+  <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(ellipse 62% 66% at 24% 44%,rgba(5,7,13,.80) 0%,rgba(5,7,13,.48) 48%,rgba(5,7,13,0) 74%)"></div>
+  <!-- 概念标注：水 → 金 -->
+  <div class="hidden md:flex absolute right-10 top-[15%] items-center gap-2 pointer-events-none">
+    <span class="badge text-goldlt/80 tracking-[.3em]">Au · 现金流</span>
+    <span class="w-1.5 h-1.5 rounded-full" style="background:#F5DC82;box-shadow:0 0 12px #F5DC82"></span>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-5 pt-36 pb-10 relative z-10">
+    <div class="reveal flex flex-wrap items-center gap-2.5 mb-6">
+      <span class="chip rounded-full px-3 py-1 badge text-goldlt">公用事业 · 水电</span>
+      <span class="chip rounded-full px-3 py-1 badge text-cyanx">全球最大水电上市公司</span>
+      <span class="chip rounded-full px-3 py-1 badge text-slate-400">总装机 7,169.5 万千瓦</span>
+    </div>
+
+    <h1 class="reveal font-serifcn font-black leading-[1.08] text-[42px] sm:text-6xl md:text-8xl text-slate-100 tracking-tight" style="transition-delay:.06s">
+      把长江的水<br>
+      <span class="gold-text">炼成股东的黄金</span>
+    </h1>
+    <p class="reveal mt-6 max-w-2xl text-slate-400 text-base md:text-lg leading-relaxed font-light" style="transition-delay:.14s">
+      长江干流 + 金沙江下游<b class="text-goldlt font-medium">六座梯级电站</b>，一台以江水为原料的永续印钞机——
+      水进来，电出去，现金与分红，年复一年。
+    </p>
+
+    <!-- 四大核心数 -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
+      <div class="reveal" style="transition-delay:.2s"><div class="card card-gold p-5 tilt h-full">
+        <p class="badge text-slate-500 tracking-widest">总市值 MC</p>
+        <p class="mt-2 text-3xl md:text-4xl font-bold text-goldlt num"><span data-count="7874" data-dec="0">0</span><span class="text-base text-slate-500 font-normal ml-1">亿</span></p>
+        <p class="text-[11px] sm:text-xs text-slate-500 mt-1.5">约 · 2026-11-25 · 股价 32.18 元</p>
+        <p class="text-[11px] sm:text-xs mt-2"><span class="txt-up">年初至今 约 +16.6%</span><span class="text-slate-600 mx-1 hidden sm:inline">|</span><span class="txt-up hidden sm:inline">5日 约 +4.9%</span></p>
+      </div></div>
+      <div class="reveal" style="transition-delay:.26s"><div class="card p-5 tilt h-full">
+        <p class="badge text-slate-500 tracking-widest">加权 ROE · 2025 年报</p>
+        <p class="mt-2 text-3xl md:text-4xl font-bold text-slate-100 num"><span data-count="15.90" data-dec="2">0</span><span class="text-base text-slate-500 font-normal ml-1">%</span></p>
+        <p class="text-[11px] sm:text-xs text-slate-500 mt-1.5">精确披露值 · 归母净利 345.03 亿</p>
+        <p class="text-[11px] sm:text-xs mt-2 text-slate-500">近三年约 <span class="text-goldlt">14% – 16%</span></p>
+      </div></div>
+      <div class="reveal" style="transition-delay:.32s"><div class="card p-5 tilt h-full">
+        <p class="badge text-slate-500 tracking-widest">股息率（TTM）</p>
+        <p class="mt-2 text-3xl md:text-4xl font-bold text-cyanx num"><span data-count="3.11" data-dec="2">0</span><span class="text-base text-slate-500 font-normal ml-1">%</span></p>
+        <p class="text-[11px] sm:text-xs text-slate-500 mt-1.5">2025 年每股派现 1.00 元（含税）</p>
+        <p class="text-[11px] sm:text-xs mt-2 text-slate-500">分红率 <span class="text-cyanx">70.92%</span> · 派现 244.68 亿</p>
+      </div></div>
+      <div class="reveal" style="transition-delay:.38s"><div class="card p-5 tilt h-full">
+        <p class="badge text-slate-500 tracking-widest">十年年化（分红复权）</p>
+        <p class="mt-2 text-3xl md:text-4xl font-bold text-slate-100 num">约<span data-count="12.0" data-dec="1" class="ml-1">0</span><span class="text-base text-slate-500 font-normal ml-1">%</span></p>
+        <p class="text-[11px] sm:text-xs text-slate-500 mt-1.5">回溯测算 · 基期 2015-12-31</p>
+        <p class="text-[11px] sm:text-xs mt-2 text-slate-500">1 元 → 约 3.39 元 · 自 2014 年初约 16%</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- 数据跑马灯 -->
+  <div class="ticker relative z-10 reveal" style="transition-delay:.45s">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-5 relative z-10">
+
+<!-- ============ 01 炼金流水线 ============ -->
+<section id="chain" class="pt-20 relative">
+  <span class="ghost">01</span>
+  <div class="relative reveal mb-8">
+    <p class="badge text-gold tracking-[.35em]">SECTION 01 · HOW WATER BECOMES GOLD</p>
+    <h2 class="font-serifcn text-3xl md:text-5xl font-bold text-slate-100 mt-3">炼金流水线</h2>
+    <p class="text-slate-500 mt-3 text-sm md:text-base">2025 财年 · 从一滴水到一次分红的全链路（单位随环节变化，全部为年报披露值）</p>
+  </div>
+
+  <div class="flex flex-col md:flex-row md:items-stretch gap-4" id="pipeline"></div>
+
+  <div class="card reveal p-5 mt-4 flex flex-wrap items-center gap-x-8 gap-y-3">
+    <span class="badge text-gold tracking-[.25em]">2026Q1 开门红</span>
+    <span class="text-sm text-slate-400">归母净利 <b class="text-slate-100 num">67.61 亿</b> <span class="txt-up">+30.50%</span></span>
+    <span class="text-sm text-slate-400">发电量 <b class="text-slate-100 num">618.25 亿度</b> <span class="txt-up">+7.19%</span></span>
+    <span class="text-sm text-slate-400">2026 全年目标发电量 <b class="text-goldlt num">3,060 亿度</b></span>
+  </div>
+</section>
+
+<!-- ============ 02 六库资产 ============ -->
+<section id="assets" class="pt-24 relative">
+  <span class="ghost">02</span>
+  <div class="relative reveal mb-8">
+    <p class="badge text-gold tracking-[.35em]">SECTION 02 · THE ASSETS</p>
+    <h2 class="font-serifcn text-3xl md:text-5xl font-bold text-slate-100 mt-3">六库联调 · 沿江布阵</h2>
+    <p class="text-slate-500 mt-3 text-sm md:text-base">金沙江下游四库 + 长江干流两库 · 六库联调平滑来水、增发电量</p>
+    <div class="chip inline-flex items-center rounded-xl px-4 py-2.5 text-sm mt-4">
+      <span class="text-slate-500">2025 发电量</span>
+      <span class="text-goldlt font-bold num ml-2">3,071.94</span>
+      <span class="text-slate-500 text-xs ml-1">亿千瓦时</span>
+      <span class="txt-up text-xs ml-1">+3.82%</span>
+    </div>
+  </div>
+
+  <div class="card reveal p-4 md:p-7 mb-5">
+    <svg viewBox="0 0 1000 250" class="w-full h-auto select-none hidden sm:block" id="riverSvg">
+      <defs>
+        <linearGradient id="riverGrad" x1="0" x2="1">
+          <stop offset="0" stop-color="#0EA5E9" stop-opacity=".9"/>
+          <stop offset=".5" stop-color="#D4AF37" stop-opacity=".85"/>
+          <stop offset="1" stop-color="#F5DC82" stop-opacity=".95"/>
+        </linearGradient>
+        <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path d="M20,205 C150,190 210,168 300,150 C390,132 430,128 520,116 C640,100 760,82 980,52"
+            fill="none" stroke="url(#riverGrad)" stroke-width="12" stroke-linecap="round" opacity=".16"/>
+      <path d="M20,205 C150,190 210,168 300,150 C390,132 430,128 520,116 C640,100 760,82 980,52"
+            fill="none" stroke="url(#riverGrad)" stroke-width="2.5" class="river-dash"/>
+      <text x="60" y="234" fill="#64748B" font-size="13">金沙江下游（川滇交界）</text>
+      <line x1="30" y1="212" x2="560" y2="98" stroke="#2A3550" stroke-width="1" stroke-dasharray="3 6"/>
+      <text x="600" y="130" fill="#64748B" font-size="13">长江干流</text>
+      <line x1="560" y1="98" x2="970" y2="34" stroke="#2A3550" stroke-width="1" stroke-dasharray="3 6"/>
+      <text x="900" y="82" fill="#475569" font-size="11">→ 东流入海</text>
+      <g id="nodes"></g>
+    </svg>
+    <svg id="riverSvgM" viewBox="0 0 340 434" class="w-full h-auto sm:hidden select-none">
+      <defs>
+        <linearGradient id="riverGradM" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="434">
+          <stop offset="0" stop-color="#0EA5E9" stop-opacity=".9"/>
+          <stop offset=".55" stop-color="#D4AF37" stop-opacity=".8"/>
+          <stop offset="1" stop-color="#F5DC82" stop-opacity=".95"/>
+        </linearGradient>
+      </defs>
+      <path d="M34,18 C34,120 34,300 34,416" fill="none" stroke="url(#riverGradM)" stroke-width="8" stroke-linecap="round" opacity=".18"/>
+      <path d="M34,18 C34,120 34,300 34,416" fill="none" stroke="url(#riverGradM)" stroke-width="2" class="river-dash"/>
+      <text x="52" y="14" fill="#475569" font-size="11">上游 · 金沙江下游</text>
+      <text x="52" y="430" fill="#475569" font-size="11">下游 · 长江干流</text>
+      <g id="nodesM"></g>
+    </svg>
+    <p class="text-xs text-slate-600 mt-2">示意：自西向东（移动端为自上而下）· 点击节点查看电站档案</p>
+  </div>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4" id="stCards"></div>
+  <div class="card card-gold reveal p-5 md:p-6 mt-5" id="stDetail">
+    <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+      <h3 class="font-serifcn text-xl font-bold text-goldlt" id="dName">—</h3>
+      <span class="badge chip rounded-full px-3 py-0.5 text-slate-400" id="dSeg">—</span>
+      <span class="text-sm text-slate-500" id="dLoc">—</span>
+    </div>
+    <p class="text-sm text-slate-400 mt-3 leading-relaxed max-w-4xl" id="dDesc">—</p>
+    <div class="grid grid-cols-3 gap-3 mt-4">
+      <div class="rounded-xl border border-line bg-panel2/60 px-4 py-3"><p class="badge text-slate-500">装机容量</p><p class="text-lg font-bold text-slate-100 mt-1 num" id="dCap">—</p></div>
+      <div class="rounded-xl border border-line bg-panel2/60 px-4 py-3"><p class="badge text-slate-500">全部投产</p><p class="text-lg font-bold text-slate-100 mt-1 num" id="dYear">—</p></div>
+      <div class="rounded-xl border border-line bg-panel2/60 px-4 py-3"><p class="badge text-slate-500">占总装机</p><p class="text-lg font-bold text-goldlt mt-1 num" id="dPct">—</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 财务与估值 ============ -->
+<section id="finance" class="pt-24 relative">
+  <span class="ghost">03</span>
+  <div class="relative reveal mb-8">
+    <p class="badge text-gold tracking-[.35em]">SECTION 03 · NUMBERS</p>
+    <h2 class="font-serifcn text-3xl md:text-5xl font-bold text-slate-100 mt-3">财务与估值</h2>
+    <p class="text-slate-500 mt-3 text-sm md:text-base">2016 – 2025 · 数据：公司历年年报（2025 年年报于 2026-04-30 披露）</p>
+  </div>
+
+  <div class="grid lg:grid-cols-5 gap-4">
+    <div class="card reveal p-5 lg:col-span-3" data-chart="finance">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-2">
+        <h3 class="font-medium text-slate-200 text-sm sm:text-base">营业收入 vs 归母净利润（亿元）</h3>
+        <div class="flex gap-4 text-xs text-slate-400">
+          <span class="flex items-center gap-1.5 whitespace-nowrap"><i class="w-2.5 h-2.5 rounded-sm inline-block" style="background:rgba(212,175,55,.8)"></i>营收</span>
+          <span class="flex items-center gap-1.5 whitespace-nowrap"><i class="w-2.5 h-2.5 rounded-sm inline-block" style="background:#38BDF8"></i>归母净利</span>
+        </div>
+      </div>
+      <div class="h-72"><canvas id="chFinance"></canvas></div>
+      <p class="text-xs text-slate-600 mt-1">2023 年并表乌东德、白鹤滩后台阶式抬升；2025 年营收 862.42 亿（+2.07%）、归母净利 345.03 亿（+6.18%），财务费用同比再降 17.6 亿</p>
+    </div>
+    <div class="card reveal p-5 lg:col-span-2" style="transition-delay:.1s" data-chart="roe">
+      <h3 class="font-medium text-slate-200 mb-2 text-sm sm:text-base">加权 ROE（%，约值 · 2025 为披露值）</h3>
+      <div class="h-72"><canvas id="chRoe"></canvas></div>
+      <p class="text-xs text-slate-600 mt-1">仅 2022 年极端枯水跌破 12%，长期中枢 14% – 16%</p>
+    </div>
+  </div>
+
+  <!-- 炼金三率 -->
+  <div class="grid md:grid-cols-3 gap-4 mt-4">
+    <div class="card reveal p-5"><div class="flex justify-between items-baseline"><p class="badge text-slate-500 tracking-widest">毛利率 2025</p><span class="badge text-slate-600">水电印钞机的暴利线</span></div>
+      <p class="mt-2 text-4xl font-bold text-goldlt num"><span data-count="61.67" data-dec="2">0</span><span class="text-lg text-slate-500">%</span></p>
+      <div class="mt-3 h-1.5 rounded-full bg-panel2 overflow-hidden"><div class="h-full rounded-full gold-fill" data-w="61.67"></div></div>
+      <p class="text-xs text-slate-500 mt-2">营业成本 330.58 亿 · 水是免费的，折旧与财务费用是主要成本</p></div>
+    <div class="card reveal p-5" style="transition-delay:.08s"><div class="flex justify-between items-baseline"><p class="badge text-slate-500 tracking-widest">净利率 2025</p><span class="badge text-slate-600">四成收入落袋</span></div>
+      <p class="mt-2 text-4xl font-bold text-slate-100 num"><span data-count="40.52" data-dec="2">0</span><span class="text-lg text-slate-500">%</span></p>
+      <div class="mt-3 h-1.5 rounded-full bg-panel2 overflow-hidden"><div class="h-full rounded-full gold-fill" data-w="40.52"></div></div>
+      <p class="text-xs text-slate-500 mt-2">归母净利 345.03 亿 · 净利润现金含量 173.29%，利润是真金白银</p></div>
+    <div class="card reveal p-5" style="transition-delay:.16s"><div class="flex justify-between items-baseline"><p class="badge text-slate-500 tracking-widest">资产负债率</p><span class="badge text-slate-600">乌白并购的代价与消化</span></div>
+      <p class="mt-2 text-4xl font-bold text-cyanx num"><span data-count="58.27" data-dec="2">0</span><span class="text-lg text-slate-500">%</span></p>
+      <div class="mt-3 h-1.5 rounded-full bg-panel2 overflow-hidden"><div class="h-full rounded-full cyan-fill" data-w="58.27"></div></div>
+      <p class="text-xs text-slate-500 mt-2">有息负债约 2,880 亿 · 财务费用 93.71 亿，逐年压降中</p></div>
+  </div>
+
+  <!-- 十年表 -->
+  <div class="card reveal p-5 mt-4 overflow-x-auto">
+    <h3 class="font-medium text-slate-200 mb-3">十年财务速览（年报口径）</h3>
+    <table class="data-table w-full text-sm text-slate-300">
+      <thead><tr class="text-left"><th>年度</th><th>营收（亿元）</th><th>归母净利（亿元）</th><th>净利同比</th><th>加权ROE（约）</th><th>每股股利（元）</th><th>分红率（约）</th></tr></thead>
+      <tbody id="finTbody"></tbody>
+    </table>
+    <p class="text-xs text-slate-600 mt-3">注：2022 年营收下滑主因长江流域特大干旱；2022 年分红率 94% 为当年利润基数偏低所致；2024 年营收约 844.9 亿为按披露同比推算的约值。</p>
+  </div>
+
+  <!-- 估值 -->
+  <div class="grid md:grid-cols-3 gap-4 mt-4">
+    <div class="card reveal p-5">
+      <p class="badge text-slate-500 tracking-widest">市盈率 PE（TTM）</p>
+      <p class="mt-2 text-4xl font-bold text-goldlt num">约 24.1<span class="text-lg text-slate-500 ml-1">倍</span></p>
+      <div class="mt-3 h-1.5 rounded-full bg-panel2 overflow-hidden"><div class="h-full rounded-full" style="width:88%;background:linear-gradient(90deg,#8A6B17,#F5DC82)"></div></div>
+      <p class="text-xs text-slate-500 mt-2">近十年偏高分位（约90%）· 历史中枢约 16 – 19 倍，当前已计入较高预期</p>
+    </div>
+    <div class="card reveal p-5" style="transition-delay:.08s">
+      <p class="badge text-slate-500 tracking-widest">市净率 PB</p>
+      <p class="mt-2 text-4xl font-bold text-slate-100 num">约 3.45<span class="text-lg text-slate-500 ml-1">倍</span></p>
+      <div class="mt-3 h-1.5 rounded-full bg-panel2 overflow-hidden"><div class="h-full rounded-full" style="width:82%;background:linear-gradient(90deg,#334155,#38BDF8)"></div></div>
+      <p class="text-xs text-slate-500 mt-2">近十年偏高分位（约80%）· 每股净资产 9.05 元，历史区间约 1.5 – 3.5 倍</p>
+    </div>
+    <div class="card reveal p-5" style="transition-delay:.16s">
+      <p class="badge text-slate-500 tracking-widest">股息率 vs 10年期国债</p>
+      <p class="mt-2 text-4xl font-bold text-cyanx num whitespace-nowrap">3.11<span class="text-lg">%</span><span class="text-slate-600 text-2xl mx-2">vs</span><span class="text-slate-300 num">约1.8<span class="text-lg">%</span></span></p>
+      <div class="mt-3 h-1.5 rounded-full bg-panel2 overflow-hidden"><div class="h-full rounded-full" style="width:30%;background:linear-gradient(90deg,#0EA5E9,#38BDF8)"></div></div>
+      <p class="text-xs text-slate-500 mt-2">自身历史偏低分位（区间约 2.5% – 5%）· 仍高于无风险利率约 1.3pct</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 逻辑与风险 ============ -->
+<section id="logic" class="pt-24 relative">
+  <span class="ghost">04</span>
+  <div class="relative reveal mb-8">
+    <p class="badge text-gold tracking-[.35em]">SECTION 04 · THESIS & RISK</p>
+    <h2 class="font-serifcn text-3xl md:text-5xl font-bold text-slate-100 mt-3">为什么买 · 什么会输</h2>
+  </div>
+  <div class="grid lg:grid-cols-2 gap-4">
+    <div class="grid sm:grid-cols-2 gap-4" id="logicCards"></div>
+    <div class="grid gap-4 content-start" id="riskCards"></div>
+  </div>
+</section>
+
+<!-- ============ 05 十年回测 ============ -->
+<section id="backtest" class="pt-24 relative">
+  <span class="ghost">05</span>
+  <div class="relative reveal mb-8">
+    <p class="badge text-gold tracking-[.35em]">SECTION 05 · 10Y BACKTEST</p>
+    <h2 class="font-serifcn text-3xl md:text-5xl font-bold text-slate-100 mt-3">十年复利回测</h2>
+    <p class="text-slate-500 mt-3 text-sm md:text-base">2016 – 2026 · 含分红再投资 · 回溯测算（约值），基准 2015-12-31 投入 1 元</p>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+    <div class="card card-gold reveal p-5"><p class="badge text-slate-500 tracking-widest">累计收益</p>
+      <p class="mt-2 text-3xl font-bold text-goldlt num">约 +<span data-count="239" data-dec="0">0</span><span class="text-lg text-slate-500">%</span></p>
+      <p class="text-xs text-slate-500 mt-1">1 元 → 约 3.39 元（2026-11-25）</p></div>
+    <div class="card reveal p-5" style="transition-delay:.08s"><p class="badge text-slate-500 tracking-widest">年化复合（分红复权）</p>
+      <p class="mt-2 text-3xl font-bold text-slate-100 num">约 <span data-count="12.0" data-dec="1">0</span><span class="text-lg text-slate-500">%</span></p>
+      <p class="text-xs text-slate-500 mt-1">10.9 年几何平均</p></div>
+    <div class="card reveal p-5" style="transition-delay:.16s"><p class="badge text-slate-500 tracking-widest">分红再投资贡献</p>
+      <p class="mt-2 text-3xl font-bold text-cyanx num whitespace-nowrap">约 <span data-count="3.9" data-dec="1">0</span><span class="text-base text-slate-500 ml-0.5">pct/年</span></p>
+      <p class="text-xs text-slate-500 mt-1">股价年化约 8.0% → 含分红约 12.0%</p></div>
+    <div class="card reveal p-5" style="transition-delay:.24s"><p class="badge text-slate-500 tracking-widest">自 2014 年初起算</p>
+      <p class="mt-2 text-3xl font-bold text-slate-100 num">约 <span data-count="16" data-dec="0">0</span><span class="text-lg text-slate-500">%</span></p>
+      <p class="text-xs text-slate-500 mt-1">分红复权年化 · 起点更低故更高</p></div>
+  </div>
+
+  <div class="grid lg:grid-cols-5 gap-4">
+    <div class="card reveal p-5 lg:col-span-3" data-chart="back">
+      <h3 class="font-medium text-slate-200 mb-2 text-sm sm:text-base">1 元投入的累计净值（含分红再投资）</h3>
+      <div class="h-80"><canvas id="chBack"></canvas></div>
+      <p class="text-xs text-slate-600 mt-1">2021 高点后经历 2022 枯水与 2025 小幅回调，2026 再创新高——回撤浅、修复快的低波动复利资产</p>
+    </div>
+    <div class="card reveal p-5 lg:col-span-2" style="transition-delay:.1s" data-chart="yearly">
+      <h3 class="font-medium text-slate-200 mb-2 text-sm sm:text-base">年度收益率（% · 涨红 / 跌绿）</h3>
+      <div class="h-80"><canvas id="chYearly"></canvas></div>
+      <p class="text-xs text-slate-600 mt-1">十一年中仅 3 个年度为负，最大年度亏损不足 5%</p>
+    </div>
+  </div>
+
+  <div class="card reveal p-5 mt-4 overflow-x-auto">
+    <h3 class="font-medium text-slate-200 mb-3">年度明细（回溯测算 · 约值）</h3>
+    <table class="data-table w-full text-sm text-slate-300">
+      <thead><tr class="text-left"><th>年度</th><th>股价涨跌幅</th><th>股息率（约）</th><th>含分红收益</th><th>累计净值（2015末=100）</th></tr></thead>
+      <tbody id="btTbody"></tbody>
+    </table>
+    <p class="text-xs text-slate-600 mt-3">口径：按年末收盘价（拆股调整）与次年分红再投资测算；不同起算点与复权方式结果差异较大——自 2014 年初起算约 16%。过往业绩不代表未来，不构成收益承诺。</p>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="mt-20 pb-12">
+  <div class="gold-rule mb-8"></div>
+  <div class="card reveal p-6 md:p-8">
+    <h3 class="font-serifcn text-lg font-bold text-goldlt mb-3">免责声明</h3>
+    <p class="text-sm text-slate-500 leading-relaxed">
+      本页面数据仅供投资研究参考，不构成投资建议。财务数据取自公司 2016–2025 年年度报告及公开披露文件；市值、PE、PB、股息率等行情数据为 2026 年 11 月 25 日前后公开市场数据（约值）；年化收益率为基于历史价格与分红的回溯测算，不同起算点与复权口径结果差异较大，过往业绩不代表未来表现。投资有风险，决策需谨慎。
+    </p>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 text-xs text-slate-600">
+      <span>© 2026 · 长江电力（600900.SH）投资研究</span>
+      <span>数据基准日 2026-11-25</span>
+      <span class="flex items-center gap-2"><span class="glow-dot"></span>水变黄金 · GOLD FROM WATER</span>
+    </div>
+  </div>
+</footer>
+</main>
+
+<style>
+  .river-dash{stroke-dasharray:6 14;animation:flow 2.4s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-40}}
+  .gold-fill{background:linear-gradient(90deg,#8A6B17,#F5DC82);width:0;transition:width 1.6s cubic-bezier(.2,.7,.3,1)}
+  .cyan-fill{background:linear-gradient(90deg,#0E7490,#38BDF8);width:0;transition:width 1.6s cubic-bezier(.2,.7,.3,1)}
+</style>
+
+<script>
+/* ==================== 精确数据 ==================== */
+const STATIONS=[
+  {name:'乌东德水电站',seg:'金沙江下游',loc:'川滇交界（云南禄劝 / 四川会东）',cap:'1,020 万千瓦',gw:10.2,year:'2021 年',pct:'14.2%',cx:150,cy:186,
+   desc:'乌白注入的核心资产之一，世界第七大水电站，2020–2021 年全面投产，与白鹤滩同属金沙江下游"西电东送"主力。'},
+  {name:'白鹤滩水电站',seg:'金沙江下游',loc:'川滇交界（四川宁南 / 云南巧家）',cap:'1,600 万千瓦',gw:16.0,year:'2022 年',pct:'22.3%',cx:262,cy:163,
+   desc:'全球单机容量最大（百万千瓦水轮机组）的水电站，装机居全球第二，是 2023 年业绩台阶式增长的核心来源。'},
+  {name:'溪洛渡水电站',seg:'金沙江下游',loc:'川滇交界（四川雷波 / 云南永善）',cap:'1,386 万千瓦',gw:13.86,year:'2014 年',pct:'19.3%',cx:375,cy:146,
+   desc:'金沙江下游骨干电源，2014 年 6 月全面投产，与向家坝联合调度运行。'},
+  {name:'向家坝水电站',seg:'金沙江下游',loc:'川滇交界（四川叙州 / 云南水富）',cap:'640 万千瓦',gw:6.4,year:'2014 年',pct:'8.9%',cx:492,cy:120,
+   desc:'金沙江下游最末一级、距三峡最近的梯级电站，六库联调的重要节点。'},
+  {name:'三峡水电站',seg:'长江干流',loc:'湖北宜昌（三斗坪）',cap:'2,250 万千瓦',gw:22.5,year:'2012 年',pct:'31.4%',cx:712,cy:86,
+   desc:'世界装机容量最大的水电站，长江电力旗舰资产，兼具防洪、航运、补水等综合效益。'},
+  {name:'葛洲坝水电站',seg:'长江干流',loc:'湖北宜昌（城区江段）',cap:'271.5 万千瓦',gw:2.72,year:'1988 年',pct:'3.8%',cx:845,cy:70,
+   desc:'长江干流第一座大型水电站，与三峡联合调度、梯级补偿，是六库联调的出海口。'},
+];
+const FIN=[
+  {y:2016,rev:489.6,np:167.3,npg:null,roe:15.0,dps:0.54,pr:65},
+  {y:2017,rev:501.5,np:222.6,npg:33.1,roe:16.6,dps:0.68,pr:68},
+  {y:2018,rev:512.4,np:226.1,npg:1.6,roe:15.9,dps:0.68,pr:66},
+  {y:2019,rev:498.9,np:215.4,npg:-4.7,roe:14.2,dps:0.68,pr:70},
+  {y:2020,rev:577.8,np:263.0,npg:22.1,roe:15.9,dps:0.70,pr:60},
+  {y:2021,rev:556.5,np:262.7,npg:-0.1,roe:14.9,dps:0.82,pr:71},
+  {y:2022,rev:520.6,np:213.1,npg:-18.9,roe:11.5,dps:0.85,pr:94},
+  {y:2023,rev:781.1,np:272.4,npg:27.8,roe:13.9,dps:0.82,pr:74},
+  {y:2024,rev:844.9,np:325.0,npg:19.3,roe:15.4,dps:0.94,pr:71},
+  {y:2025,rev:862.4,np:345.0,npg:6.2,roe:15.9,dps:1.00,pr:71},
+];
+const BT=[
+  {y:'2016',pr:-6.6,dy:4.0,tr:-2.6,nav:97.4},
+  {y:'2017',pr:23.1,dy:5.4,tr:28.5,nav:125.2},
+  {y:'2018',pr:1.9,dy:4.4,tr:6.3,nav:133.1},
+  {y:'2019',pr:15.7,dy:4.3,tr:20.0,nav:159.7},
+  {y:'2020',pr:4.2,dy:3.7,tr:7.9,nav:172.3},
+  {y:'2021',pr:18.5,dy:3.7,tr:22.2,nav:210.5},
+  {y:'2022',pr:-7.5,dy:3.6,tr:-3.9,nav:202.3},
+  {y:'2023',pr:11.1,dy:4.1,tr:15.2,nav:233.1},
+  {y:'2024',pr:26.6,dy:3.5,tr:30.1,nav:303.2},
+  {y:'2025',pr:-8.0,dy:3.2,tr:-4.8,nav:288.7},
+  {y:'2026*',pr:13.6,dy:3.7,tr:17.3,nav:338.6},
+];
+
+/* ==================== 跑马灯 ==================== */
+const TICKS=[
+  ['总市值','约 7,874 亿'],['股价','32.18 元'],['PE（TTM）','24.1 倍'],['PB','3.45 倍'],
+  ['股息率 TTM','3.11%'],['2025 每股股利','1.00 元'],['分红率','70.92%'],
+  ['加权 ROE','15.90%'],['2025 营收','862.42 亿'],['2025 归母净利','345.03 亿'],
+  ['2025 发电量','3,071.94 亿度'],['总装机','7,169.5 万千瓦'],['经营现金流','605.63 亿'],['自由现金流','356.52 亿'],
+];
+const track=document.getElementById('tickerTrack');
+const seg=TICKS.map(([k,v])=>`<span class="ti"><span class="text-slate-500">${k}</span><b class="num">${v}</b><span class="sep">◆</span></span>`).join('');
+track.innerHTML=seg+seg;
+
+/* ==================== 炼金流水线 ==================== */
+const PIPE=[
+  {icon:'<path d="M12 3c3 4.5 6 7.8 6 11a6 6 0 1 1-12 0c0-3.2 3-6.5 6-11Z"/>',label:'原料 · 来水发电',v:3071.94,dec:2,pre:'',unit:'亿千瓦时',sub:'六库联调 2025 年发电量',delta:'+3.82%',up:true},
+  {icon:'<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/>',label:'收入 · 卖电收钱',v:862.42,dec:2,pre:'',unit:'亿元',sub:'营业收入（市场化+保量保价）',delta:'+2.07%',up:true},
+  {icon:'<circle cx="9" cy="9" r="5"/><circle cx="15" cy="15" r="5"/>',label:'利润 · 毛利落袋',v:345.03,dec:2,pre:'',unit:'亿元',sub:'归母净利润 · 净利率 40.52%',delta:'+6.18%',up:true},
+  {icon:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/>',label:'现金 · 自由现金流',v:356.52,dec:2,pre:'',unit:'亿元',sub:'经营现金流 605.63 亿 · 含量 173%',delta:'',up:true},
+  {icon:'<path d="M12 4v10m0 0 4-4m-4 4-4-4"/><path d="M5 20h14"/>',label:'回报 · 派给股东',v:244.68,dec:2,pre:'',unit:'亿元',sub:'每股 1.00 元 · 分红率 70.92%',delta:'连续高分红',up:true},
+];
+document.getElementById('pipeline').innerHTML=PIPE.map((s,i)=>`
+  <div class="reveal flex md:flex-1 min-w-0 items-stretch gap-3 md:gap-0" style="transition-delay:${i*.08}s">
+    <div class="card p-5 w-full">
+      <div class="flex items-center gap-2.5">
+        <span class="step-icon shrink-0 w-9 h-9"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="#F5DC82" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round">${s.icon}</svg></span>
+        <p class="badge text-slate-500">${s.label}</p>
+      </div>
+      <p class="mt-3 text-[27px] leading-none font-bold text-goldlt num whitespace-nowrap">${s.pre}<span data-count="${s.v}" data-dec="${s.dec}">0</span></p>
+      <p class="text-[11px] text-slate-500 mt-1.5">${s.unit}</p>
+      <p class="text-xs text-slate-500 mt-2 leading-relaxed">${s.sub}</p>
+      ${s.delta?`<p class="text-xs mt-1.5 ${s.up?'txt-up':'text-cyanx'}">${s.delta}</p>`:''}
+    </div>
+  </div>
+  ${i<PIPE.length-1?'<div class="hidden md:flex items-center" style="width:38px"><div class="pipe w-full"></div></div>':''}
+`).join('');
+
+/* ==================== 逻辑与风险 ==================== */
+const LOGIC=[
+  {n:'01',t:'不可复制的物理垄断',d:'长江干流与金沙江下游六座梯级电站的唯一运营主体，六库联调增发电量、平滑来水——这块牌照，大自然只发了一张。'},
+  {n:'02',t:'类债券的高分红现金流',d:'2025 年经营现金流 605.63 亿、自由现金流 356.52 亿；现金分红 244.68 亿、分红率 70.92%。买它本质是买一张票息递增的永续债。'},
+  {n:'03',t:'乌白注入的台阶式增量',d:'2023 年乌东德、白鹤滩（合计 2,620 万千瓦）注入，装机由 4,549 万千瓦跃至约 7,170 万千瓦，2024 年净利 +19.3%。'},
+  {n:'04',t:'水风光储的第二曲线',d:'抽水蓄能（甘肃张掖在建，河南巩义、江西寻乌完成投决）+ 秘鲁第一大风电运营商，把长江的模式复制到更多河流与风场。'},
+];
+const RISK=[
+  {t:'来水波动风险',d:'2022 年极端枯水致净利同比下滑约 18%——天不下雨，机器就要降速，枯水年业绩与分红弹性直接承压。'},
+  {t:'电价政策风险',d:'市场化交易占比提升、绿电定价与电力体制改革方向存在不确定性，可能影响度电收入中枢。'},
+  {t:'利率上行压制估值',d:'高股息资产对利率敏感：无风险利率趋势上行将压缩股息溢价；公司有息负债约 2,880 亿，融资成本亦受影响。'},
+];
+document.getElementById('logicCards').innerHTML=LOGIC.map((l,i)=>`
+  <div class="card reveal p-5 h-full" style="transition-delay:${i*.07}s">
+    <span class="font-serifcn text-3xl gold-text font-black">${l.n}</span>
+    <h3 class="text-slate-100 font-bold mt-2 text-[15px]">${l.t}</h3>
+    <p class="text-[13px] text-slate-400 mt-2 leading-relaxed">${l.d}</p>
+  </div>`).join('');
+document.getElementById('riskCards').innerHTML=RISK.map((r,i)=>`
+  <div class="card reveal p-5 h-full" style="transition-delay:${.3+i*.07}s;border-color:rgba(248,113,113,.28)">
+    <div class="flex items-center gap-2.5"><span class="w-2 h-2 rounded-full bg-up" style="animation:pulse2 2s infinite"></span><h3 class="text-slate-100 font-bold text-[15px]">${r.t}</h3></div>
+    <p class="text-[13px] text-slate-400 mt-2 leading-relaxed">${r.d}</p>
+  </div>`).join('');
+const st=document.createElement('style');st.textContent='@keyframes pulse2{0%,100%{opacity:1}50%{opacity:.35}}';document.head.appendChild(st);
+
+/* ==================== 地图 ==================== */
+const NS='http://www.w3.org/2000/svg';
+const nodesG=document.getElementById('nodes'),nodesMG=document.getElementById('nodesM'),cardsWrap=document.getElementById('stCards');
+let activeId=4; // 三峡
+function renderNode(st,i,desktop){
+  const g=document.createElementNS(NS,'g');
+  g.setAttribute('class','st-node'+(st===STATIONS[activeId]?' active':''));
+  if(desktop){
+    g.innerHTML=`<circle class="pulse-node" cx="${st.cx}" cy="${st.cy}" r="7" fill="none" stroke="#D4AF37" stroke-width="1.5"/>
+      <circle class="core" cx="${st.cx}" cy="${st.cy}" r="8.5" filter="url(#glow)" fill="${st===STATIONS[activeId]?'#FFF3C4':'#D4AF37'}" stroke="#05070D" stroke-width="2"/>
+      <text x="${st.cx}" y="${st.cy-19}" text-anchor="middle" fill="#E8EDF5" font-size="14.5" font-weight="600" font-family="'Noto Sans SC',sans-serif">${st.name.replace('水电站','')}</text>
+      <text x="${st.cx}" y="${st.cy+31}" text-anchor="middle" fill="#D4AF37" font-size="11.5" font-family="'Noto Sans SC',sans-serif">${st.gw} GW</text>`;
+  }else{
+    const y=62+i*66;
+    g.innerHTML=`<circle class="pulse-node" cx="34" cy="${y}" r="7" fill="none" stroke="#D4AF37" stroke-width="1.5"/>
+      <circle class="core" cx="34" cy="${y}" r="8.5" fill="${st===STATIONS[activeId]?'#FFF3C4':'#D4AF37'}" stroke="#05070D" stroke-width="2"/>
+      <text x="56" y="${y+5}" fill="#E8EDF5" font-size="15" font-weight="600" font-family="'Noto Sans SC',sans-serif">${st.name}</text>
+      <text x="326" y="${y+5}" text-anchor="end" fill="#D4AF37" font-size="13" font-family="'Noto Sans SC',sans-serif">${st.gw} GW</text>`;
+  }
+  g.addEventListener('click',()=>{activeId=STATIONS.indexOf(st);renderAll();});
+  return g;
+}
+function renderCard(st,i){
+  const d=document.createElement('div');
+  d.className='card cursor-pointer p-5 h-full'+(st===STATIONS[activeId]?' card-gold':'');
+  d.innerHTML=`
+    <div class="flex items-center justify-between gap-2">
+      <h3 class="font-serifcn font-bold text-slate-100 text-[17px]">${st.name}</h3>
+      <span class="badge chip rounded-full px-2.5 py-0.5 ${st.seg==='长江干流'?'text-cyanx':'text-goldlt'} shrink-0">${st.seg}</span>
+    </div>
+    <p class="text-slate-500 text-xs mt-1.5 flex items-center gap-1">
+      <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      ${st.loc}
+    </p>
+    <div class="mt-3 flex items-baseline gap-2">
+      <span class="text-[26px] font-bold text-goldlt num">${st.gw.toFixed(st.gw<3?2:1)}</span><span class="text-xs text-slate-500">GW（${st.cap}）</span>
+    </div>
+    <div class="mt-2 h-1.5 rounded-full bg-panel2 overflow-hidden"><div class="h-full rounded-full" style="width:${st.gw/22.5*100}%;background:linear-gradient(90deg,#8A6B17,#F5DC82)"></div></div>
+    <p class="text-xs text-slate-600 mt-2">全部投产：${st.year} · 占总装机 ${st.pct}</p>`;
+  d.addEventListener('click',()=>{activeId=STATIONS.indexOf(st);renderAll();document.getElementById('stDetail').scrollIntoView({behavior:'smooth',block:'nearest'});});
+  return d;
+}
+function renderDetail(){
+  const st=STATIONS[activeId];
+  dName.textContent=st.name;dSeg.textContent=st.seg;dLoc.textContent=st.loc;
+  dDesc.textContent=st.desc;dCap.textContent=st.cap;dYear.textContent=st.year;dPct.textContent=st.pct;
+}
+function renderAll(){
+  nodesG.innerHTML='';nodesMG.innerHTML='';cardsWrap.innerHTML='';
+  STATIONS.forEach((s,i)=>nodesG.appendChild(renderNode(s,i,true)));
+  STATIONS.forEach((s,i)=>nodesMG.appendChild(renderNode(s,i,false)));
+  STATIONS.forEach((s,i)=>cardsWrap.appendChild(renderCard(s,i)));
+  renderDetail();observeReveal();
+}
+renderAll();
+
+/* ==================== 表格 ==================== */
+document.getElementById('finTbody').innerHTML=FIN.map(r=>{
+  const pg=r.npg==null?'<span class="text-slate-600">—</span>':`<span class="${r.npg>=0?'txt-up':'txt-down'}">${r.npg>=0?'+':''}${r.npg.toFixed(1)}%</span>`;
+  return `<tr><td class="text-slate-200 font-medium">${r.y}</td><td>${r.rev.toFixed(1)}</td><td class="text-goldlt font-medium">${r.np.toFixed(1)}</td><td>${pg}</td><td>${r.roe.toFixed(1)}%</td><td>${r.dps.toFixed(2)}</td><td>${r.pr}%</td></tr>`;
+}).join('');
+document.getElementById('btTbody').innerHTML=BT.map(r=>{
+  const c=v=>v>=0?`<span class="txt-up">+${v.toFixed(1)}%</span>`:`<span class="txt-down">${v.toFixed(1)}%</span>`;
+  return `<tr><td class="text-slate-200 font-medium">${r.y}</td><td>${c(r.pr)}</td><td class="text-cyanx">+${r.dy.toFixed(1)}%</td><td class="font-medium">${c(r.tr)}</td><td class="text-goldlt num">${r.nav.toFixed(1)}</td></tr>`;
+}).join('');
+
+/* ==================== 数字滚动（进入视口触发） ==================== */
+function countUp(el){
+  const target=parseFloat(el.dataset.count),dec=parseInt(el.dataset.dec||'0');
+  const dur=1500,t0=performance.now();
+  (function tick(t){
+    const p=Math.min((t-t0)/dur,1),e=1-Math.pow(1-p,3);
+    el.textContent=(target*e).toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+    if(p<1)requestAnimationFrame(tick);
+  })(t0);
+}
+const cntIO=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){countUp(e.target);cntIO.unobserve(e.target);}
+}),{threshold:.4});
+document.querySelectorAll('[data-count]').forEach(el=>cntIO.observe(el));
+
+/* 进度条填充动画 */
+const fillIO=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.style.width=e.target.dataset.w+'%';fillIO.unobserve(e.target);}
+}),{threshold:.5});
+document.querySelectorAll('.gold-fill,.cyan-fill').forEach(el=>fillIO.observe(el));
+
+/* ==================== 入场动画 ==================== */
+var io=null;
+function observeReveal(){
+  const items=document.querySelectorAll('.reveal:not(.in)');
+  if(!('IntersectionObserver' in window)){items.forEach(el=>el.classList.add('in'));return;}
+  if(!io)io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+  }),{threshold:.1,rootMargin:'0px 0px -6% 0px'});
+  items.forEach(el=>io.observe(el));
+}
+observeReveal();
+window.addEventListener('load',()=>setTimeout(observeReveal,300));
+
+/* 卡片光斑跟随 */
+document.addEventListener('mousemove',e=>{
+  const c=e.target.closest('.card');if(!c)return;
+  const r=c.getBoundingClientRect();
+  c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+  c.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+});
+/* 3D 倾斜 */
+document.querySelectorAll('.tilt').forEach(el=>{
+  el.style.transition='transform .2s ease-out';
+  el.addEventListener('mousemove',e=>{
+    const r=el.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    el.style.transform=`perspective(700px) rotateY(${x*7}deg) rotateX(${-y*7}deg) translateY(-3px)`;
+  });
+  el.addEventListener('mouseleave',()=>el.style.transform='');
+});
+/* 阅读进度 */
+const bar=document.getElementById('bar');
+function onScroll(){
+  const max=document.documentElement.scrollHeight-window.innerHeight;
+  bar.style.width=(max>0?Math.min(window.scrollY/max,1)*100:0).toFixed(2)+'%';
+}
+window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+/* ==================== HERO 粒子：水变黄金 ==================== */
+(function(){
+  const cv=document.getElementById('flow'),ctx=cv.getContext('2d');
+  let W,H,run=true,raf=null;
+  function resize(){
+    const DPR=Math.min(devicePixelRatio||1,2),r=cv.getBoundingClientRect();
+    W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  resize();window.addEventListener('resize',resize);
+  function bez(t){
+    const p0={x:-70,y:H*.74},p1={x:W*.34,y:H*.62},p2={x:W*.63,y:H*.30},p3={x:W+90,y:H*.13},u=1-t;
+    return{x:u*u*u*p0.x+3*u*u*t*p1.x+3*u*t*t*p2.x+t*t*t*p3.x,
+           y:u*u*u*p0.y+3*u*u*t*p1.y+3*u*t*t*p2.y+t*t*t*p3.y};
+  }
+  function sprite(rgb){
+    const s=document.createElement('canvas');s.width=s.height=64;
+    const c=s.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,32);
+    g.addColorStop(0,`rgba(${rgb},.95)`);g.addColorStop(.35,`rgba(${rgb},.55)`);g.addColorStop(1,`rgba(${rgb},0)`);
+    c.fillStyle=g;c.fillRect(0,0,64,64);return s;
+  }
+  const spBlue=sprite('56,189,248'),spGold=sprite('245,220,130'),spWhite=sprite('255,243,196');
+  const N=150,ps=[];
+  for(let i=0;i<N;i++)ps.push({t:Math.random(),sp:.0011+Math.random()*.0024,ph:Math.random()*Math.PI*2,f:.6+Math.random()*1.4,amp:5+Math.random()*26,sz:7+Math.random()*22});
+  let last=performance.now(),dash=0;
+  function frame(now){
+    if(!run){raf=null;return;}
+    const dt=Math.min(now-last,50);last=now;dash-=dt*.045;
+    ctx.clearRect(0,0,W,H);
+    /* 江流主线 */
+    ctx.save();ctx.beginPath();
+    for(let i=0;i<=60;i++){const p=bez(i/60);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);}
+    const lg=ctx.createLinearGradient(0,0,W,0);
+    lg.addColorStop(0,'rgba(14,165,233,.5)');lg.addColorStop(.55,'rgba(212,175,55,.55)');lg.addColorStop(1,'rgba(245,220,130,.75)');
+    ctx.strokeStyle=lg;ctx.lineWidth=1.6;ctx.setLineDash([5,16]);ctx.lineDashOffset=dash;ctx.stroke();ctx.restore();
+    /* 粒子：前半程是水（青），后半程成金 */
+    for(const p of ps){
+      p.t+=p.sp*dt/16;
+      if(p.t>1.05){p.t=-.05;p.ph=Math.random()*6.28;}
+      const tt=Math.max(0,Math.min(p.t,1)),pos=bez(tt);
+      const y=pos.y+Math.sin(now/1000*p.f+p.ph)*p.amp;
+      const a=Math.sin(Math.min(p.t,1)*Math.PI)*.85;
+      if(p.t<=0)continue;
+      const m=Math.max(0,Math.min((p.t-.3)/.5,1)); // 0水 1金
+      ctx.globalAlpha=a*(1-m);
+      ctx.drawImage(spBlue,pos.x-p.sz/2,y-p.sz/2,p.sz,p.sz);
+      if(m>0){ctx.globalAlpha=a*m;ctx.drawImage(spGold,pos.x-p.sz/2,y-p.sz/2,p.sz,p.sz);}
+      if(m>.8){ctx.globalAlpha=a*(m-.8)*2.5;ctx.drawImage(spWhite,pos.x-p.sz*0.22,y-p.sz*0.22,p.sz*0.45,p.sz*0.45);}
+    }
+    ctx.globalAlpha=1;
+    raf=requestAnimationFrame(frame);
+  }
+  raf=requestAnimationFrame(frame);
+  new IntersectionObserver(es=>es.forEach(e=>{
+    run=e.isIntersecting;
+    if(run&&!raf){last=performance.now();raf=requestAnimationFrame(frame);}
+  })).observe(cv);
+})();
+
+/* ==================== Chart.js（进入视口才初始化） ==================== */
+Chart.defaults.color='#8FA3BF';Chart.defaults.font.family="'Noto Sans SC',sans-serif";Chart.defaults.font.size=12;
+const GRID='rgba(148,163,184,.09)';
+const TIP={backgroundColor:'rgba(5,7,13,.95)',borderColor:'rgba(212,175,55,.45)',borderWidth:1,titleColor:'#F5DC82',bodyColor:'#E8EDF5',padding:12,cornerRadius:8,displayColors:true};
+function goldGrad(c,a=.85,b=.25){const ar=c.chart.chartArea;if(!ar)return`rgba(212,175,55,${a})`;
+  const g=c.chart.ctx.createLinearGradient(0,ar.top,0,ar.bottom);g.addColorStop(0,`rgba(212,175,55,${a})`);g.addColorStop(1,`rgba(212,175,55,${b})`);return g;}
+const SMALL=window.innerWidth<640,years=FIN.map(r=>r.y);
+const XAXIS={grid:{display:false},ticks:{font:{size:SMALL?9:11},maxRotation:0}};
+const makers={
+  finance(){new Chart(document.getElementById('chFinance'),{data:{labels:years,datasets:[
+      {type:'bar',label:'营业收入',data:FIN.map(r=>r.rev),backgroundColor:c=>goldGrad(c),borderRadius:6,maxBarThickness:26,order:2},
+      {type:'line',label:'归母净利润',data:FIN.map(r=>r.np),borderColor:'#38BDF8',backgroundColor:'transparent',pointBackgroundColor:'#38BDF8',pointBorderColor:'#05070D',pointRadius:4,pointHoverRadius:6,borderWidth:2.5,tension:.35,fill:false,order:1}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...TIP,callbacks:{label:c=>` ${c.dataset.label}：${c.parsed.y.toFixed(2)} 亿元`}}},
+      scales:{x:XAXIS,y:{grid:{color:GRID},ticks:{font:{size:SMALL?9:11}}}}}});},
+  roe(){new Chart(document.getElementById('chRoe'),{type:'line',data:{labels:years,datasets:[{label:'加权ROE',data:FIN.map(r=>r.roe),borderColor:'#D4AF37',borderWidth:2.5,tension:.35,pointBackgroundColor:c=>FIN[c.dataIndex].y===2022?'#F87171':'#F5DC82',pointBorderColor:'#05070D',pointRadius:4,pointHoverRadius:7,fill:true,backgroundColor:'rgba(212,175,55,.10)'}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...TIP,callbacks:{label:c=>` 加权ROE：约 ${c.parsed.y.toFixed(1)}%`}}},scales:{x:XAXIS,y:{grid:{color:GRID},min:9,max:18,ticks:{font:{size:SMALL?9:11},callback:v=>v+'%'}}}}});},
+  back(){const lbl=BT.map(r=>r.y.replace('2026*','2026YTD'));
+    new Chart(document.getElementById('chBack'),{type:'line',data:{labels:lbl,datasets:[{label:'累计净值',data:BT.map(r=>r.nav),borderColor:'#D4AF37',borderWidth:3,tension:.4,pointBackgroundColor:'#F5DC82',pointBorderColor:'#05070D',pointRadius:4,pointHoverRadius:7,fill:true,backgroundColor:c=>{const a=c.chart.chartArea;if(!a)return'rgba(212,175,55,.12)';const g=c.chart.ctx.createLinearGradient(0,a.top,0,a.bottom);g.addColorStop(0,'rgba(212,175,55,.32)');g.addColorStop(1,'rgba(212,175,55,.02)');return g;}}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...TIP,callbacks:{label:c=>` 累计净值：${c.parsed.y.toFixed(1)}（+${(c.parsed.y-100).toFixed(0)}%）`,afterBody:its=>{const i=its[0].dataIndex;return i===0?'':'当年含分红：约 '+(BT[i].tr>=0?'+':'')+BT[i].tr.toFixed(1)+'%';}}}},scales:{x:XAXIS,y:{grid:{color:GRID},min:80,max:360,stepSize:50,ticks:{font:{size:SMALL?9:11},stepSize:50}}}}});},
+  yearly(){const lbl=BT.map(r=>r.y.replace('2026*','2026YTD'));
+    new Chart(document.getElementById('chYearly'),{type:'bar',data:{labels:lbl,datasets:[{data:BT.map(r=>r.tr),backgroundColor:BT.map(r=>r.tr>=0?'rgba(248,113,113,.85)':'rgba(74,222,128,.85)'),borderRadius:4,maxBarThickness:22}]},
+    options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{...TIP,callbacks:{label:c=>` ${c.parsed.x>=0?'+':''}${c.parsed.x.toFixed(1)}%`}}},scales:{x:{grid:{color:GRID},ticks:{font:{size:SMALL?9:11},callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:SMALL?10:12}}}}}});}
+};
+const chIO=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){makers[e.target.dataset.chart]();chIO.unobserve(e.target);}
+}),{threshold:.2});
+document.querySelectorAll('[data-chart]').forEach(el=>chIO.observe(el));
+</script>
+</body>
+</html>
